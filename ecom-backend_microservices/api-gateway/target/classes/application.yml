@@ -1,0 +1,303 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: 
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+  cloud:
+    gateway:
+      routes:
+        # Auth Service Routes
+        - id: auth-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: auth-service
+                fallbackUri: forward:/fallback/auth
+        
+        # Auth Service - Sellers endpoint
+        - id: auth-sellers
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/api/auth/sellers/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: auth-service
+                fallbackUri: forward:/fallback/auth
+        
+        # Product Service - Public Routes
+        - id: product-public
+          uri: lb://PRODUCT-SERVICE
+          predicates:
+            - Path=/api/public/products/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: product-service
+                fallbackUri: forward:/fallback/product
+        
+        # Category Service - Public Routes  
+        - id: category-public
+          uri: lb://PRODUCT-SERVICE
+          predicates:
+            - Path=/api/public/categories/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: product-service
+                fallbackUri: forward:/fallback/product
+        
+        # Product Service - Admin Routes
+        - id: product-admin
+          uri: lb://PRODUCT-SERVICE
+          predicates:
+            - Path=/api/admin/products/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: product-service
+                fallbackUri: forward:/fallback/product
+        
+        # Category Service - Admin Routes
+        - id: category-admin
+          uri: lb://PRODUCT-SERVICE
+          predicates:
+            - Path=/api/admin/categories/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: product-service
+                fallbackUri: forward:/fallback/product
+        
+        # Cart Service Routes
+        - id: cart-service
+          uri: lb://CART-SERVICE
+          predicates:
+            - Path=/api/cart/**, /api/carts/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: cart-service
+                fallbackUri: forward:/fallback/cart
+        
+        # Order Service Routes
+        - id: order-service
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/api/order/**, /api/admin/orders/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: order-service
+                fallbackUri: forward:/fallback/order
+        
+        # Payment Service Routes
+        - id: payment-service
+          uri: lb://PAYMENT-SERVICE
+          predicates:
+            - Path=/api/payments/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: payment-service
+                fallbackUri: forward:/fallback/payment
+        
+        # Address Service Routes (Part of Auth Service)
+        - id: address-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/api/addresses/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: auth-service
+                fallbackUri: forward:/fallback/auth
+        
+        # Analytics Route (Order Service)
+        - id: analytics
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/api/admin/app/analytics
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: order-service
+                fallbackUri: forward:/fallback/order
+                
+        # Legacy Routes (if needed during migration)
+        - id: legacy-app
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/legacy/**
+          filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: legacy-app
+                fallbackUri: forward:/fallback/legacy
+        
+        # Swagger UI Routes for each service
+        - id: auth-swagger
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/auth/swagger-ui/**, /auth/v3/api-docs/**
+          filters:
+            - StripPrefix=1
+            
+        - id: product-swagger
+          uri: lb://PRODUCT-SERVICE
+          predicates:
+            - Path=/product/swagger-ui/**, /product/v3/api-docs/**
+          filters:
+            - StripPrefix=1
+            
+        - id: cart-swagger
+          uri: lb://CART-SERVICE
+          predicates:
+            - Path=/cart/swagger-ui/**, /cart/v3/api-docs/**
+          filters:
+            - StripPrefix=1
+            
+        - id: order-swagger
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/order/swagger-ui/**, /order/v3/api-docs/**
+          filters:
+            - StripPrefix=1
+            
+        - id: payment-swagger
+          uri: lb://PAYMENT-SERVICE
+          predicates:
+            - Path=/payment/swagger-ui/**, /payment/v3/api-docs/**
+          filters:
+            - StripPrefix=1
+            
+        - id: notification-swagger
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/notification/swagger-ui/**, /notification/v3/api-docs/**
+          filters:
+            - StripPrefix=1
+            
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY
+            methods: GET,POST
+            backoff:
+              firstBackoff: 10ms
+              maxBackoff: 50ms
+              factor: 2
+              basedOnPreviousValue: false
+      
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: 
+              - "http://localhost:3000"  # Docker frontend
+              - "http://localhost:5173"  # Dev server
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      auth-service:
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: TIME_BASED
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+      product-service:
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: TIME_BASED
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+      cart-service:
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: TIME_BASED
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+      order-service:
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: TIME_BASED
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+      payment-service:
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: TIME_BASED
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+        
+  timelimiter:
+    instances:
+      auth-service:
+        timeoutDuration: 3s
+      product-service:
+        timeoutDuration: 3s
+        
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+      
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.cors: DEBUG
+
+# JWT configuration (matching your backend)
+jwt:
+  secret: mySecretKey123912738aopsgjnspkmndfsopkvajoirjg94gf2opfng2moknm
+  expiration: 300000000
+  cookieName: springBootEcom
+  cache:
+    ttl: 300  # 5 minutes in seconds 

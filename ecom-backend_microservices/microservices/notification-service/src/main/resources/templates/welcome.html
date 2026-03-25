@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to E-Commerce Store!</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 40px;
+            border-radius: 0 0 10px 10px;
+        }
+        .benefits {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .benefit-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .benefit-item:last-child {
+            border-bottom: none;
+        }
+        .button {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #666;
+        }
+        .social-links {
+            margin: 20px 0;
+        }
+        .social-links a {
+            margin: 0 10px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Welcome to <span th:text="${appName}">E-Commerce Store</span>!</h1>
+        <p style="font-size: 18px;">We're thrilled to have you join our community</p>
+    </div>
+    
+    <div class="content">
+        <p>Hi <span th:text="${userName}">there</span>! 👋</p>
+        
+        <p>Welcome aboard! Your account has been successfully created, and you're now part of our amazing shopping community.</p>
+        
+        <div class="benefits">
+            <h2 style="color: #667eea;">Here's what you can enjoy:</h2>
+            <div class="benefit-item">
+                <strong>🛍️ Exclusive Deals</strong><br>
+                Get access to member-only discounts and early sale notifications
+            </div>
+            <div class="benefit-item">
+                <strong>🚚 Free Shipping</strong><br>
+                Enjoy free shipping on orders over $50
+            </div>
+            <div class="benefit-item">
+                <strong>💳 Secure Checkout</strong><br>
+                Shop with confidence using our secure payment methods
+            </div>
+            <div class="benefit-item">
+                <strong>📱 Order Tracking</strong><br>
+                Track your orders in real-time from purchase to delivery
+            </div>
+            <div class="benefit-item">
+                <strong>🎁 Reward Points</strong><br>
+                Earn points with every purchase and redeem them for discounts
+            </div>
+        </div>
+        
+        <h3>Ready to start shopping?</h3>
+        <p>As a welcome gift, here's a special 10% discount code just for you:</p>
+        
+        <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; text-align: center; margin: 20px 0;">
+            <strong style="font-size: 24px; color: #856404;">WELCOME10</strong><br>
+            <small>Valid for your first purchase</small>
+        </div>
+        
+        <div style="text-align: center;">
+            <a href="https://ecommerce.com/shop" class="button">
+                Start Shopping Now
+            </a>
+        </div>
+        
+        <h3>Need Help?</h3>
+        <p>Our customer support team is here to help you 24/7. You can:</p>
+        <ul>
+            <li>Browse our <a href="https://ecommerce.com/help">Help Center</a></li>
+            <li>Contact us at <a th:href="@{mailto:{email}(email=${supportEmail})}" th:text="${supportEmail}">support@ecommerce.com</a></li>
+            <li>Chat with us live on our website</li>
+        </ul>
+        
+        <div class="social-links" style="text-align: center;">
+            <p>Follow us for the latest updates and exclusive offers:</p>
+            <a href="https://facebook.com/ecommerce">📘 Facebook</a>
+            <a href="https://instagram.com/ecommerce">📷 Instagram</a>
+            <a href="https://twitter.com/ecommerce">🐦 Twitter</a>
+        </div>
+        
+        <p>Happy shopping!</p>
+        
+        <p>Warm regards,<br>
+        The <span th:text="${appName}">E-Commerce Store</span> Team</p>
+    </div>
+    
+    <div class="footer">
+        <p>You received this email because you signed up at <span th:text="${appName}">E-Commerce Store</span> with the email <span th:text="${userEmail}">user@example.com</span></p>
+        <p>If you didn't create an account, please ignore this email or <a href="https://ecommerce.com/contact">contact us</a>.</p>
+        <p>&copy; <span th:text="${year}">2024</span> <span th:text="${appName}">E-Commerce Store</span>. All rights reserved.</p>
+    </div>
+</body>
+</html> 

@@ -1,0 +1,48 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/auth_db
+    username: postgres
+    password: admin@123
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+  redis:
+    host: localhost
+    port: 6379
+    password: 
+    timeout: 60000ms
+
+# JWT Configuration
+jwt:
+  secret: mySecretKey123912738aopsgjnspkmndfsopkvajoirjg94gf2opfng2moknm
+  expiration: 300000000  # Legacy property (will be deprecated)
+  expiration-ms: 900000  # 15 minutes for access token
+  refresh-expiration-ms: 604800000  # 7 days for refresh token
+  cookie-name: ecom-auth-jwt
+
+# Kafka Configuration
+kafka:
+  bootstrap-servers: localhost:9092
+  producer:
+    key-serializer: org.apache.kafka.common.serialization.StringSerializer
+    value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  topics:
+    user-events: user-events
+
+# Service specific configuration
+auth:
+  cors:
+    allowed-origins: http://localhost:5173,http://localhost:3000
+  default-roles:
+    - USER
+  admin:
+    username: admin
+    email: admin@ecommerce.com
+    password: adminPass 

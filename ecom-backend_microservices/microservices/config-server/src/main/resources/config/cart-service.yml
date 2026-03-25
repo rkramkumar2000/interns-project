@@ -1,0 +1,106 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: cart-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/cart_db
+    username: postgres
+    password: admin@123
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+  redis:
+    host: localhost
+    port: 6379
+    password: 
+    timeout: 60000ms
+  cache:
+    type: redis
+    redis:
+      time-to-live: 1800000 # 30 minutes
+      cache-null-values: false
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:mySecretKey123912738aopsgjnspkmndfsopkvajoirjg94gf2opfng2moknm}
+
+# Kafka Configuration
+kafka:
+  bootstrap-servers: localhost:9092
+  producer:
+    key-serializer: org.apache.kafka.common.serialization.StringSerializer
+    value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  consumer:
+    group-id: cart-service-group
+    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+    properties:
+      spring.json.trusted.packages: "*"
+  topics:
+    cart-events: cart-events
+    product-events: product-events
+    order-events: order-events
+
+# Service specific configuration
+cart:
+  max-items-per-cart: 50
+  cart-expiry-hours: 72
+  anonymous-cart-expiry-hours: 24
+  cache:
+    names:
+      - carts
+      - cartItems
+      - userCarts
+
+# Feign Configuration for calling other services
+feign:
+  client:
+    config:
+      product-service:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: basic
+      user-service:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: basic
+  circuitbreaker:
+    enabled: true
+
+# Resilience4j Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      product-service:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+  retry:
+    instances:
+      product-service:
+        maxAttempts: 3
+        waitDuration: 500
+        retryExceptions:
+          - java.io.IOException
+          - java.net.SocketTimeoutException
+
+# Zipkin Configuration
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans 
